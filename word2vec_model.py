@@ -1,35 +1,57 @@
-
 import numpy as np
-from gensim.models import Word2Vec
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
 
 class Word2VecModel:
-    def __init__(self, vector_size=100, window=5, min_count=2, workers=4):
+    def __init__(self, vector_size=100, window=2, min_count=1):
         self.vector_size = vector_size
         self.window = window
         self.min_count = min_count
-        self.workers = workers
-        self.model = None
+        self.word_vectors = {}
         self.document_vectors = {}
+        self.vocab = []
         
     def train(self, tokenized_docs, documents):
-        self.model = Word2Vec(
-            sentences=tokenized_docs,
-            vector_size=self.vector_size,
-            window=self.window,
-            min_count=self.min_count,
-            workers=self.workers,
-            sg=1
-        )
+        # Build vocabulary
+        word_freq = {}
+        for doc in tokenized_docs:
+            for word in doc:
+                word_freq[word] = word_freq.get(word, 0) + 1
         
+        self.vocab = [word for word, freq in word_freq.items() 
+                     if freq >= self.min_count]
+        
+        # Initialize random word vectors
+        np.random.seed(42)
+        for word in self.vocab:
+            self.word_vectors[word] = np.random.normal(0, 0.1, self.vector_size)
+        
+        # Simple co-occurrence based training (simplified Word2Vec)
+        for doc in tokenized_docs:
+            for i, target_word in enumerate(doc):
+                if target_word not in self.word_vectors:
+                    continue
+                    
+                # Context window
+                start = max(0, i - self.window)
+                end = min(len(doc), i + self.window + 1)
+                
+                for j in range(start, end):
+                    if i != j and doc[j] in self.word_vectors:
+                        # Simple update rule (simplified)
+                        self.word_vectors[target_word] += 0.01 * self.word_vectors[doc[j]]
+        
+        # Create document vectors by averaging word vectors
         for doc_id, tokens in enumerate(tokenized_docs):
-            word_vectors = []
+            word_vecs = []
             for word in tokens:
-                if word in self.model.wv:
-                    word_vectors.append(self.model.wv[word])
-            if word_vectors:
-                self.document_vectors[doc_id] = np.mean(word_vectors, axis=0)
+                if word in self.word_vectors:
+                    word_vecs.append(self.word_vectors[word])
+            
+            if word_vecs:
+                self.document_vectors[doc_id] = np.mean(word_vecs, axis=0)
             else:
                 self.document_vectors[doc_id] = np.zeros(self.vector_size)
                 
@@ -39,10 +61,8 @@ class Word2VecModel:
         if vec1 is not None and vec2 is not None:
             return cosine_similarity([vec1], [vec2])[0][0]
         return 0.0
+
     def find_similar_documents(self, query_tokens, documents, top_n=5):
-        if not self.model:
-            raise ValueError("Model not trained")
-        
         query_vector = self._get_document_vector(query_tokens)
         similarities = []
         
@@ -56,13 +76,8 @@ class Word2VecModel:
     def _get_document_vector(self, tokens):
         word_vectors = []
         for word in tokens:
-            if word in self.model.wv:
-                word_vectors.append(self.model.wv[word])
+            if word in self.word_vectors:
+                word_vectors.append(self.word_vectors[word])
         if word_vectors:
             return np.mean(word_vectors, axis=0)
         return np.zeros(self.vector_size)
-    
-    def get_similar_words(self, word, top_n=10):
-        if self.model and word in self.model.wv:
-            return self.model.wv.most_similar(word, topn=top_n)
-        return []
