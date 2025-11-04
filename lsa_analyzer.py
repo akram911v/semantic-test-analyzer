@@ -106,7 +106,7 @@ class LSASemanticAnalyzer:
         self.word2vec_model.train(self.tokenized_docs, self.documents)
         print("Word2Vec model trained successfully")
     
-    # Doc2Vec methods - FIXED: removed unused parameters
+    # Doc2Vec methods - CORRECTED VERSION
     def initialize_doc2vec(self, vector_size=100):
         self.doc2vec_model = Doc2VecModel(
             vector_size=vector_size
