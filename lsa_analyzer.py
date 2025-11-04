@@ -107,21 +107,18 @@ class LSASemanticAnalyzer:
         print("Word2Vec model trained successfully")
     
     # Doc2Vec methods - FIXED: removed unused parameters
-   def initialize_doc2vec(self, vector_size=100, window=5, min_count=2, epochs=20):
-    self.doc2vec_model = Doc2VecModel(
-        vector_size=vector_size,
-        window=window,
-        min_count=min_count,
-        epochs=epochs
-    )
-
-def train_doc2vec(self, vector_size=100, window=5, min_count=2, epochs=20):
-    if not hasattr(self, 'doc2vec_model') or self.doc2vec_model is None:
-        self.initialize_doc2vec(vector_size, window, min_count, epochs)
-    self.doc2vec_model.train(self.tokenized_docs, self.documents)
-    print("Doc2Vec model trained successfully")
+    def initialize_doc2vec(self, vector_size=100):
+        self.doc2vec_model = Doc2VecModel(
+            vector_size=vector_size
+        )
     
-    # Existing LSA methods remain the same...
+    def train_doc2vec(self, vector_size=100):
+        if not hasattr(self, 'doc2vec_model') or self.doc2vec_model is None:
+            self.initialize_doc2vec(vector_size)
+        self.doc2vec_model.train(self.tokenized_docs, self.documents)
+        print("Doc2Vec model trained successfully")
+    
+    # Existing LSA methods
     def document_similarity(self, doc1, doc2):
         """Calculate semantic similarity between two documents"""
         processed_doc1 = self.preprocess_text(doc1)
@@ -265,4 +262,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
