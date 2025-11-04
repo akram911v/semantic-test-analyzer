@@ -2,14 +2,13 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
-import logging
 
 class Doc2VecModel:
     def __init__(self, vector_size=100):
         self.vector_size = vector_size
         self.document_vectors = {}
         self.vectorizer = TfidfVectorizer(max_features=1000)
-        self.svd = TruncatedSVD(n_components=vector_size)
+        self.svd = None
         
     def train(self, tokenized_docs, documents):
         # Convert tokens back to strings for TF-IDF
@@ -18,7 +17,16 @@ class Doc2VecModel:
         # Create TF-IDF matrix
         tfidf_matrix = self.vectorizer.fit_transform(doc_strings)
         
-        # Reduce dimensionality (simplified Doc2Vec alternative)
+        # Get actual number of features
+        n_features = tfidf_matrix.shape[1]
+        
+        # Adjust vector_size if needed (can't be larger than number of features)
+        actual_vector_size = min(self.vector_size, n_features)
+        
+        # Initialize SVD with adjusted size
+        self.svd = TruncatedSVD(n_components=actual_vector_size)
+        
+        # Reduce dimensionality
         doc_vectors = self.svd.fit_transform(tfidf_matrix)
         
         # Store document vectors
@@ -33,6 +41,9 @@ class Doc2VecModel:
         return 0.0
     
     def find_similar_documents(self, query_tokens, documents, top_n=5):
+        if not self.svd:
+            raise ValueError("Model not trained")
+        
         # Convert query tokens to string
         query_string = ' '.join(query_tokens)
         
