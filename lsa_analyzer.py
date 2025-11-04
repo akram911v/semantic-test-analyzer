@@ -12,10 +12,14 @@ import re
 from word2vec_model import Word2VecModel
 from doc2vec_model import Doc2VecModel
 
-# Download required NLTK data
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# Download required NLTK data with error handling
+try:
+    nltk.download('punkt', quiet=True)
+    nltk.download('stopwords', quiet=True)
+    nltk.download('wordnet', quiet=True)
+    nltk.download('punkt_tab', quiet=True)
+except:
+    print("NLTK data download completed or already exists")
 
 class LSASemanticAnalyzer:
     def __init__(self, n_components=100):
@@ -38,16 +42,29 @@ class LSASemanticAnalyzer:
         text = re.sub(r'[^\w\s]', ' ', text)
         text = re.sub(r'\d+', '', text)
         
-        # Tokenization
-        tokens = word_tokenize(text)
+        # Simple tokenization (fallback if NLTK fails)
+        try:
+            tokens = word_tokenize(text)
+        except:
+            # Fallback: simple whitespace tokenization
+            tokens = text.split()
         
         # Remove stopwords
-        stop_words = set(stopwords.words('english'))
-        tokens = [token for token in tokens if token not in stop_words]
+        try:
+            stop_words = set(stopwords.words('english'))
+            tokens = [token for token in tokens if token not in stop_words]
+        except:
+            # Fallback: common English stopwords
+            common_stopwords = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+            tokens = [token for token in tokens if token not in common_stopwords]
         
         # Lemmatization
-        lemmatizer = WordNetLemmatizer()
-        tokens = [lemmatizer.lemmatize(token) for token in tokens]
+        try:
+            lemmatizer = WordNetLemmatizer()
+            tokens = [lemmatizer.lemmatize(token) for token in tokens]
+        except:
+            # Fallback: no lemmatization
+            pass
         
         # Remove short tokens
         tokens = [token for token in tokens if len(token) > 2]
@@ -89,22 +106,19 @@ class LSASemanticAnalyzer:
         self.word2vec_model.train(self.tokenized_docs, self.documents)
         print("Word2Vec model trained successfully")
     
-    # Doc2Vec methods  
-    def initialize_doc2vec(self, vector_size=100, window=5, min_count=2, epochs=20):
+    # Doc2Vec methods - CORRECTED
+    def initialize_doc2vec(self, vector_size=100):
         self.doc2vec_model = Doc2VecModel(
-            vector_size=vector_size,
-            window=window,
-            min_count=min_count,
-            epochs=epochs
+            vector_size=vector_size
         )
     
-    def train_doc2vec(self, vector_size=100, window=5, min_count=2, epochs=20):
+    def train_doc2vec(self, vector_size=100):
         if not hasattr(self, 'doc2vec_model') or self.doc2vec_model is None:
-            self.initialize_doc2vec(vector_size, window, min_count, epochs)
+            self.initialize_doc2vec(vector_size)
         self.doc2vec_model.train(self.tokenized_docs, self.documents)
         print("Doc2Vec model trained successfully")
     
-    # Existing LSA methods remain the same...
+    # Existing LSA methods
     def document_similarity(self, doc1, doc2):
         """Calculate semantic similarity between two documents"""
         processed_doc1 = self.preprocess_text(doc1)
@@ -188,7 +202,7 @@ def main():
     
     # Train Word2Vec and Doc2Vec models
     analyzer.train_word2vec()
-    analyzer.train_doc2vec()
+    analyzer.train_doc2vec(vector_size=50)  # FIXED: use smaller vector size
     
     print("\n" + "="*50)
     print("EXTENDED SEMANTIC ANALYSIS DEMONSTRATION")
