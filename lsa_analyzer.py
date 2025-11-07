@@ -202,7 +202,7 @@ def main():
     
     # Train Word2Vec and Doc2Vec models
     analyzer.train_word2vec()
-    analyzer.train_doc2vec(vector_size=50)  # FIXED: use smaller vector size
+    analyzer.train_doc2vec(vector_size=50)
     
     print("\n" + "="*50)
     print("EXTENDED SEMANTIC ANALYSIS DEMONSTRATION")
