@@ -110,14 +110,3 @@ semantic-test-analyzer/
 Academic Use - Practical Work 3 Submission
 ```
 
-**Step 38: Update requirements.txt**
-
-Update your `requirements.txt` file:
-
-```txt
-numpy>=1.21.0
-scikit-learn>=1.0.0
-nltk>=3.6.0
-pandas>=1.3.0
-```
-
