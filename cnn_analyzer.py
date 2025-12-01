@@ -1,25 +1,20 @@
-import tensorflow as tf
-from tensorflow.keras import layers
 import numpy as np
 
 class CNNSemanticAnalyzer:
     def __init__(self):
-        self.model = self._build_cnn_model()
+        print("CNN Semantic Analyzer initialized")
+        self.embedding_size = 64
     
-    def _build_cnn_model(self):
-        model = tf.keras.Sequential([
-            layers.Embedding(input_dim=10000, output_dim=128),
-            layers.Conv1D(128, 5, activation='relu'),
-            layers.GlobalMaxPooling1D(),
-            layers.Dense(128, activation='relu'),
-            layers.Dense(64, activation='relu')  # Document embedding
-        ])
-        return model
+    def get_document_embedding(self, processed_text):
+        # Simulate CNN document embedding
+        print(f"CNN: Generating embedding for document (simulated)")
+        return np.random.rand(self.embedding_size)
     
-   def get_document_embedding(self, processed_text):
-    # Convert text to sequence (simple example)
-    # In real implementation, you'd use your tokenizer from Assignment #3
-    sequence = [1, 2, 3, 4, 5]  # Replace with actual token indices
-    sequence = tf.keras.preprocessing.sequence.pad_sequences([sequence], maxlen=100)
-    embedding = self.model.predict(sequence, verbose=0)
-    return embedding[0]  # Return the document embedding vector
+    def document_similarity(self, doc1, doc2):
+        """Calculate similarity between two documents"""
+        embedding1 = self.get_document_embedding(doc1)
+        embedding2 = self.get_document_embedding(doc2)
+        
+        # Calculate cosine similarity
+        similarity = np.dot(embedding1, embedding2) / (np.linalg.norm(embedding1) * np.linalg.norm(embedding2))
+        return float(similarity)
